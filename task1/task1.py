@@ -2,42 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-
-def read_pca_dataset():
-    """
-    Read pca_dataset.txt then return the numpy array of given data.
-
-    :return: [N, 2] array of given PCA dataset.
-    """
-    file = open("task1/pca_dataset.txt", "r")
-    var = []
-    for line in file:
-        # TODO: float may cause casting issue. Check it!
-        var.append(tuple(map(float, line.rstrip().split())))
-    file.close()
-
-    return np.array(var)
-
-
-def read_pedestrian_trajectories():
-    """
-    Read data_DMAP_PCA_vadere.txt then return the numpy array of given data.
-
-    :return: [1000, 30] array of given PCA dataset.
-    """
-    file = open("task1/data_DMAP_PCA_vadere.txt", "r")
-    var = []
-    for line in file:
-        # TODO: float may cause casting issue. Check it!
-        var.append(tuple(map(float, line.rstrip().split())))
-    file.close()
-
-    return np.array(var)
+from Util import read_file
 
 
 def part_1():
     # Read data
-    X = read_pca_dataset()
+    X = read_file('pca_dataset.txt')
 
     # Find center of data set
     mean_d1, mean_d2 = X.mean(0)
@@ -86,7 +56,7 @@ def part_2():
     # TODO: Show RGB image via pyplot
     # TODO: Show grayscale image via pyplot
     # TODO: investigate: Is the PIL better than misc? misc.imresize is deprecated.
-    image = Image.open('task1/PIXNIO-28860-1536x1152.jpeg') \
+    image = Image.open('data/PIXNIO-28860-1536x1152.jpeg') \
         .convert('L') \
         .resize((249, 185))
     image.show()
@@ -102,7 +72,7 @@ def part_2():
 
 def part_3():
     # Read data
-    X = read_pedestrian_trajectories()
+    X = read_file('data_DMAP_PCA_vadere.txt')
 
     # TODO: Visualize the path of the first two pedestrians in the two-dimensional space. What do you observe?
 
@@ -116,8 +86,8 @@ def part_3():
 
 
 def main():
-    # part_1()
-    # part_2()
+    part_1()
+    part_2()
     part_3()
 
 
