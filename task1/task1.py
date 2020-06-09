@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
 
 
 def read_pca_dataset():
@@ -8,7 +9,23 @@ def read_pca_dataset():
 
     :return: [N, 2] array of given PCA dataset.
     """
-    file = open("pca_dataset.txt", "r")
+    file = open("task1/pca_dataset.txt", "r")
+    var = []
+    for line in file:
+        # TODO: float may cause casting issue. Check it!
+        var.append(tuple(map(float, line.rstrip().split())))
+    file.close()
+
+    return np.array(var)
+
+
+def read_pedestrian_trajectories():
+    """
+    Read data_DMAP_PCA_vadere.txt then return the numpy array of given data.
+
+    :return: [1000, 30] array of given PCA dataset.
+    """
+    file = open("task1/data_DMAP_PCA_vadere.txt", "r")
     var = []
     for line in file:
         # TODO: float may cause casting issue. Check it!
@@ -64,8 +81,44 @@ def part_1():
     plt.show()
 
 
+def part_2():
+    # Image operation in python: https://www.pluralsight.com/guides/importing-image-data-into-numpy-arrays
+    # TODO: Show RGB image via pyplot
+    # TODO: Show grayscale image via pyplot
+    # TODO: investigate: Is the PIL better than misc? misc.imresize is deprecated.
+    image = Image.open('task1/PIXNIO-28860-1536x1152.jpeg') \
+        .convert('L') \
+        .resize((249, 185))
+    image.show()
+    data = np.asarray(image)
+
+    # TODO: run SVD
+    # TODO: Make Reconstruction  (a) all principal components.
+    # TODO: Make Reconstruction  (b) 120 principal components.
+    # TODO: Make Reconstruction  (c) 50 principal components.
+    # TODO: Make Reconstruction  (d) 10 principal components.
+    # TODO: At what number is the “energy” lost through truncation smaller than 1%?
+
+
+def part_3():
+    # Read data
+    X = read_pedestrian_trajectories()
+
+    # TODO: Visualize the path of the first two pedestrians in the two-dimensional space. What do you observe?
+
+    # Make PCA analysis via SVD
+    U, sigma, V = np.linalg.svd(X, 0)
+    S = np.diag(sigma)
+    trace = S.trace()
+
+    for s in sigma:
+        print("Energy:" + str(s / trace))
+
+
 def main():
-    part_1()
+    # part_1()
+    # part_2()
+    part_3()
 
 
 if __name__ == '__main__':
