@@ -107,7 +107,7 @@ def part_2():
     plt.show()
     # TODO: At what number is the “energy” lost through truncation smaller than 1%?
     total_energy = 0
-    for i,s in enumerate(sigma):
+    for i, s in enumerate(sigma):
         energy = s / trace
         print("Energy of component number " + str(i) + ": " + str(energy))
         total_energy += energy
