@@ -63,11 +63,57 @@ def part_2():
     data = np.asarray(image)
 
     # TODO: run SVD
+
+    # Extract the mean
+    data = data - data.mean(axis=0, keepdims=True)
+
+    # Make PCA analysis via SVD
+    U, sigma, V = np.linalg.svd(data, 0)
+    S = np.diag(sigma)
+    trace = S.trace()
+
     # TODO: Make Reconstruction  (a) all principal components.
+    reconstructed_all = np.dot(U, np.dot(S, V))
     # TODO: Make Reconstruction  (b) 120 principal components.
+    S_120 = np.zeros(S.shape)
+    for i in range(120):
+        S_120[i][i] = sigma[i]
+    reconstructed_120 = np.dot(U, np.dot(S_120, V))
     # TODO: Make Reconstruction  (c) 50 principal components.
+    S_50 = np.zeros(S.shape)
+    for i in range(50):
+        S_50[i][i] = sigma[i]
+    reconstructed_50 = np.dot(U, np.dot(S_50, V))
     # TODO: Make Reconstruction  (d) 10 principal components.
+    S_10 = np.zeros(S.shape)
+    for i in range(10):
+        S_10[i][i] = sigma[i]
+    reconstructed_10 = np.dot(U, np.dot(S_10, V))
+
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+    fig.suptitle('Reconstructed images')
+    ax1.imshow(reconstructed_all)
+    ax1.set_title("Reconstructed with all principal components")
+    ax2.imshow(reconstructed_120)
+    ax2.set_title("Reconstructed with 120 principal components")
+    ax3.imshow(reconstructed_50)
+    ax3.set_title("Reconstructed with 50 principal components")
+    ax4.imshow(reconstructed_10)
+    ax4.set_title("Reconstructed with 10 principal components")
+
+    for ax in fig.get_axes():
+        ax.label_outer()
+
+    plt.show()
     # TODO: At what number is the “energy” lost through truncation smaller than 1%?
+    total_energy = 0
+    for i, s in enumerate(sigma):
+        energy = s / trace
+        print("Energy of component number " + str(i) + ": " + str(energy))
+        total_energy += energy
+        if total_energy > 0.99:
+            print("We have 99% of the energy, we do not need components after number " + str(i) + ".")
+            break
 
 
 def part_3():
@@ -86,9 +132,9 @@ def part_3():
 
 
 def main():
-    part_1()
+    #part_1()
     part_2()
-    part_3()
+    #part_3()
 
 
 if __name__ == '__main__':
