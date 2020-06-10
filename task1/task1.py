@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from Util import read_file
+from Util import read_file, MAIN_PATH
 
 
 def part_1():
@@ -56,7 +56,7 @@ def part_2():
     # TODO: Show RGB image via pyplot
     # TODO: Show grayscale image via pyplot
     # TODO: investigate: Is the PIL better than misc? misc.imresize is deprecated.
-    image = Image.open('data/PIXNIO-28860-1536x1152.jpeg') \
+    image = Image.open(MAIN_PATH + 'data/PIXNIO-28860-1536x1152.jpeg') \
         .convert('L') \
         .resize((249, 185))
     image.show()
