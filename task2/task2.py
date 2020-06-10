@@ -1,5 +1,6 @@
 import math
 
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 import scipy.spatial
@@ -38,12 +39,18 @@ def distance_matrix(X):
     return D
 
 
-def main():
-    N = 1000
-    L = 5
-    X = generate_points(N)
-    # X = np.array([[1, 2], [3, 4], [5, 6]])
+def diffusion_map(X, L):
+    """
+    Run the diffusion map algorithm then return artifacts
 
+    :param X: [N, M] numpy array of data matrix
+    :param L: int A number of largest eigenvalues
+    :return:
+            S: [N, L] eigenvectors φl
+            a_l: [L, ] eigenvalues of normalized kernel matrix T_head
+            v_l: [L, N] corresponding eigenvectors of normalized kernel matrix T_head
+            lambda_l: eigenvalues of Tˆ1/ε by λ^2 = a^1/ε.
+    """
     # 1. Form a distance matrix D with entries
     D = distance_matrix(X)
     # 2. Set ε to 5% of the diameter of the data set: ε = 0.05(maxi,j Di,j )
@@ -63,12 +70,39 @@ def main():
     # 8. Find the L + 1 largest eigenvalues al and associated eigenvectors vl of T
     # The normalized selected eigenvector corresponding to the eigenvalue w[i] is the column v[:,i].
     w, v = eigh(T)
-    a_l = w[-(L + 1):]
-    v_l = v.T[-(L + 1):]
-    # 9. Compute the eigenvalues of Tˆ1/ε by λ2 = a1/ε.
-    lambda_l = a_l ** (1 / epsilon)  # TODO: Do we need to take square root of a_l?
+    a_l = w[-(L):]
+    v_l = v.T[-(L):]
+    # 9. Compute the eigenvalues of Tˆ1/ε by λ^2 = a^1/ε.
+    lambda_l = np.sqrt(a_l ** (1 / epsilon))  # TODO: Do we need to take square root of a_l?
     # 10. Compute the eigenvectors φl of the matrix T = Q−1K by φl = Q−1/2vl.
     S = np.matmul(Q_inverse, v_l.T)
+
+    return S, a_l, v_l, lambda_l
+
+
+def part1():
+    N = 1000
+    L = 5
+    X = generate_points(N)
+    # X = np.array([[1, 2], [3, 4], [5, 6]])
+    S, a_l, v_l, lambda_l = diffusion_map(X, L)
+
+    fig = plt.figure(figsize=(7, 7))
+    ax = fig.add_subplot(3, 2, 1)
+    ax.scatter(X[:, 0], X[:, 1], color='red')
+    ax.set_title('Data')
+    plt.xlabel("x")
+    plt.ylabel("y")
+    for i in range(2, 7):
+        ax = fig.add_subplot(3, 2, i)
+        ax.scatter(range(0, 1000), S[:, i - 2])
+        ax.set_title('Eigen(a_l)=' + str(a_l[i - 2]))
+    plt.tight_layout()
+    plt.show()
+
+
+def main():
+    part1()
 
 
 if __name__ == '__main__':
