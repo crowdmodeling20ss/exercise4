@@ -13,7 +13,7 @@ def read_file(file_path):
     :return: [N, D] numpy array of the data in the file
     """
 
-    file = open(MAIN_PATH + "data/" + file_path, "r")
+    file = open(MAIN_PATH + "../data/" + file_path, "r")
     var = []
     for line in file:
         # TODO: float may cause casting issue. Check it!
