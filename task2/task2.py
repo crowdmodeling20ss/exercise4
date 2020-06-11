@@ -59,7 +59,6 @@ def diffusion_map_algorithm(X,L):
     :param L: Number of eigenfunctions
     :return: [N, L+1] matrix. λ0φ0, λ1φ1, ...., λL+1φL+1 for every data point
     """
-    #returns eigenfunctions
 
     # 1. Form a distance matrix D with entries
     D = distance_matrix(X)
