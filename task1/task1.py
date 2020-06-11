@@ -20,6 +20,7 @@ def part_1():
 
     # Approximates one-dimensional linear subspace
     X_head = X.dot(V[:, 0])  # V[:, 0] first column of V
+    # TODO: plot the linear subspace
 
     print("X_head: " + str(X_head))
     print("U: " + str(U))
