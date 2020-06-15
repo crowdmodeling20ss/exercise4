@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
-import sys
-sys.path.append('../')
+
 from Util import read_file, MAIN_PATH
 
 
@@ -13,19 +12,38 @@ def part_1():
     # Find center of data set
     mean_d1, mean_d2 = X.mean(0)
 
+    X_centered = X - X.mean(axis=0, keepdims=True)
+
+    mean_centered_d1, mean_centered_d2 = X_centered.mean(0)
+
     # Make PCA analysis via SVD
-    U, sigma, V = np.linalg.svd(X, 0)
-    S = np.diag(sigma)
-    trace = S.trace()
+    U, sigma, V = np.linalg.svd(X_centered, 0)
+    Sigma = np.diag(sigma)
+    trace = Sigma.trace()
+
+    S_one_dimension = np.zeros(Sigma.shape)
+    S_one_dimension[0][0] = Sigma[0][0]
+    X_one_dimension = U.dot(S_one_dimension).dot(V)
+    MSE_one = (X_centered - X_one_dimension) ** 2
+    MSE_one = np.sum(MSE_one)
+    print("MSE One Dimension: {:.4f}".format(MSE_one**2))
 
     # Approximates one-dimensional linear subspace
-    X_head = X.dot(V[:, 0])  # V[:, 0] first column of V
-    # TODO: plot the linear subspace
+    X_1D = U.dot(Sigma).dot(V[0])
+    print("X 1D: " + str(X_1D))
+    fig = plt.figure(figsize=(6, 3))
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_title('1-Dimensional Projection')
+    ax.scatter(X_1D, np.zeros(X_1D.shape), label='Projected Data', c="red", s=3)
+    plt.xlabel("z")
+    plt.legend(loc='upper left')
+    plt.tight_layout()
+    plt.show()
 
-    print("X_head: " + str(X_head))
+    print("X_head: " + str(X_one_dimension))
     print("U: " + str(U))
     print("V: " + str(V))
-    print("Sigma: " + str(S))
+    print("Sigma: " + str(Sigma))
     print("Trace: " + str(trace))
     print("Energy of " + str(sigma[0]) + ": " + str(sigma[0] / trace))
     print("Energy of " + str(sigma[1]) + ": " + str(sigma[1] / trace))
@@ -34,13 +52,17 @@ def part_1():
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_subplot(1, 1, 1)
     ax.set_title('PCA')
-    ax.scatter(X[:, 0], X[:, 1], label='Points', c="mediumseagreen", s=3)
+    ax.scatter(X[:, 0], X[:, 1], label='Data', c="mediumseagreen", s=3)
+    ax.scatter(X_centered[:, 0], X_centered[:, 1], label='Centered Data', c="lightskyblue", s=3)
+    ax.scatter(X_one_dimension[:, 0], X_one_dimension[:, 1], label='Projected Data', c="red", s=1)
     plt.xlabel("x")
     plt.ylabel("f(x)")
+    plt.grid(True)
     plt.legend(loc='upper left')
 
     # Mark the center of data set
-    ax.plot(mean_d1, mean_d2, 'o', markersize=10, color='red', alpha=0.5)
+    ax.plot(mean_d1, mean_d2, 'o', markersize=5, color='olivedrab', label='Center of data')
+    ax.plot(mean_centered_d1, mean_centered_d2, 'o', markersize=5, color='darkblue', label='Center of centralized data')
 
     # Draw the direction of two principal components
     V_T = V.T
@@ -49,7 +71,7 @@ def part_1():
 
     # Show eigenvalues of Sigma
     plt.text(V_T[0, 0] - 0.6, V_T[1, 0] + 0.1, "{:.4f}".format(sigma[0]), fontsize=12, color='darkred')
-    plt.text(V_T[0, 1], V_T[1, 1] - 0.1,  "{:.4f}".format(sigma[1]), fontsize=12, color='darkblue')
+    plt.text(V_T[0, 1], V_T[1, 1] - 0.1, "{:.4f}".format(sigma[1]), fontsize=12, color='darkblue')
     plt.show()
 
 
@@ -123,7 +145,7 @@ def part_3():
     X = read_file('data_DMAP_PCA_vadere.txt')
 
     # Visualize the path of the first two pedestrians in the two-dimensional space.
-    fig = plt.figure(figsize=(10,7))
+    fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot()
     ax.set_title('Pedestrian Paths')
     ax.plot(X[:, 0], X[:, 1], color='dodgerblue', linewidth=0.5, label='First Pedestrian')
@@ -174,7 +196,7 @@ def part_3():
         energy_5 += sigma[i] / trace
     reconstructed_5 = np.dot(U, np.dot(S_5, V))
 
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10,10))
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
     ax1.plot(reconstructed_2[:, 0], reconstructed_2[:, 1], color='dodgerblue', linewidth=0.5, label='First Pedestrian')
     ax1.plot(reconstructed_2[:, 2], reconstructed_2[:, 3], color='firebrick', linewidth=0.5, label='Second Pedestrian')
     ax1.set_title("Reconstructed with 2 principal components \n Energy: {:.2f}%".format(energy_2 * 100))
@@ -200,8 +222,8 @@ def part_3():
 
 def main():
     part_1()
-    part_2()
-    part_3()
+    # part_2()
+    # part_3()
 
 
 if __name__ == '__main__':
