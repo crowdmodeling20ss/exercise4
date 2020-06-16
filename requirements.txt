@@ -1,4 +1,4 @@
-
+Pillow~=7.1.2
 
 
 datafold~=1.0.0
