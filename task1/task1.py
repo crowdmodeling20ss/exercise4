@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+import sys
+sys.path.append('../')
 from Util import read_file, MAIN_PATH
 
 
@@ -12,18 +14,34 @@ def part_1():
     mean_d1, mean_d2 = X.mean(0)
     mean = X.mean(axis=0, keepdims=True)
     X_centered = X - mean
+    mean_centered_d1, mean_centered_d2 = X_centered.mean(0)
 
     # Make PCA analysis via SVD
     U, sigma, VT = np.linalg.svd(X_centered, 0)
-    U1, sigma1, VT1 = np.linalg.svd(X, 0)
     V = VT.T
     S = np.diag(sigma)
     trace = S.trace()
 
-    # Approximates one-dimensional linear subspace
-    X_head = X.dot(VT[:, 0])  # V[:, 0] first column of V
+    S_one_dimension = np.zeros(S.shape)
+    S_one_dimension[0][0] = S[0][0]
+    X_one_dimension = U.dot(S_one_dimension).dot(VT)
+    MSE_one = (X_centered - X_one_dimension) ** 2
+    MSE_one = np.sum(MSE_one)
+    print("MSE One Dimension: {:.4f}".format(MSE_one ** 2))
 
-    print("X_head: " + str(X_head))
+    # Approximates one-dimensional linear subspace
+    X_1D = U.dot(S).dot(VT[0])
+    print("X 1D: " + str(X_1D))
+    fig = plt.figure(figsize=(6, 3))
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_title('1-Dimensional Projection')
+    ax.scatter(X_1D, np.zeros(X_1D.shape), label='Projected Data', c="red", s=3)
+    plt.xlabel("z")
+    plt.legend(loc='upper left')
+    plt.tight_layout()
+    plt.show()
+
+    print("X_head: " + str(X_one_dimension))
     print("U: " + str(U))
     print("V: " + str(V))
     print("Sigma: " + str(S))
@@ -35,13 +53,17 @@ def part_1():
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_subplot(1, 1, 1)
     ax.set_title('PCA')
-    ax.scatter(X[:, 0], X[:, 1], label='Points', c="mediumseagreen", s=3)
+    ax.scatter(X[:, 0], X[:, 1], label='Data', c="mediumseagreen", s=3)
+    ax.scatter(X_centered[:, 0], X_centered[:, 1], label='Centered Data', c="lightskyblue", s=3)
+    ax.scatter(X_one_dimension[:, 0], X_one_dimension[:, 1], label='Projected Data', c="red", s=1)
     plt.xlabel("x")
     plt.ylabel("f(x)")
+    plt.grid(True)
     plt.legend(loc='upper left')
 
     # Mark the center of data set
-    ax.plot(mean_d1, mean_d2, 'o', markersize=10, color='red', alpha=0.5)
+    ax.plot(mean_d1, mean_d2, 'o', markersize=5, color='olivedrab', label='Center of data')
+    ax.plot(mean_centered_d1, mean_centered_d2, 'o', markersize=5, color='darkblue', label='Center of centralized data')
 
     # Draw the direction of two principal components
     plt.arrow(mean_d1, mean_d2, V[0, 0], V[1, 0], width=0.01, color='darkred', alpha=0.5)
@@ -51,6 +73,7 @@ def part_1():
     plt.text(V[0, 0] - 0.6, V[1, 0] + 0.1, "{:.4f}".format(sigma[0]), fontsize=12, color='darkred')
     plt.text(V[0, 1], V[1, 1] - 0.1, "{:.4f}".format(sigma[1]), fontsize=12, color='darkblue')
     plt.show()
+
 
 def part_2():
     # Image operation in python: https://www.pluralsight.com/guides/importing-image-data-into-numpy-arrays
@@ -106,15 +129,15 @@ def part_2():
     # Image.fromarray(reconstructed_10).show()
 
     plt.imshow(reconstructed_all, cmap='gray', vmin=0, vmax=255)
-    plt.imshow(reconstructed_all+mean, cmap='gray', vmin=0, vmax=255)
+    plt.imshow(reconstructed_all + mean, cmap='gray', vmin=0, vmax=255)
     plt.imshow(reconstructed_120, cmap='gray', vmin=0, vmax=255)
-    plt.imshow(reconstructed_120+mean, cmap='gray', vmin=0, vmax=255)
+    plt.imshow(reconstructed_120 + mean, cmap='gray', vmin=0, vmax=255)
     plt.imshow(reconstructed_50, cmap='gray', vmin=0, vmax=255)
-    plt.imshow(reconstructed_50+mean, cmap='gray', vmin=0, vmax=255)
+    plt.imshow(reconstructed_50 + mean, cmap='gray', vmin=0, vmax=255)
     plt.imshow(reconstructed_30, cmap='gray', vmin=0, vmax=255)
-    plt.imshow(reconstructed_30+mean, cmap='gray', vmin=0, vmax=255)
+    plt.imshow(reconstructed_30 + mean, cmap='gray', vmin=0, vmax=255)
     plt.imshow(reconstructed_10, cmap='gray', vmin=0, vmax=255)
-    plt.imshow(reconstructed_10+mean, cmap='gray', vmin=0, vmax=255)
+    plt.imshow(reconstructed_10 + mean, cmap='gray', vmin=0, vmax=255)
 
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
     fig.suptitle('Reconstructed images')
@@ -147,7 +170,7 @@ def part_2():
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_subplot(1, 1, 1)
     ax.set_title('Total energy level of L-th singular value')
-    #plt.scatter(np.arange(0, len(E)), E, c="mediumseagreen", s=3)
+    # plt.scatter(np.arange(0, len(E)), E, c="mediumseagreen", s=3)
     plt.ylabel("Total energy(%)")
     plt.xlabel("L")
     plt.axvline(x=10, color="lightskyblue", linestyle="--", label='Total energy at 10-th singular value')
@@ -156,7 +179,7 @@ def part_2():
 
     plt.axhline(y=98.96, color="firebrick", linestyle=":")
     plt.axvline(x=163, color="firebrick", linestyle="--", label='Total energy at 163-th singular value')
-    #164 = 99.03
+    # 164 = 99.03
 
     x_ticks = np.append(ax.get_xticks(), 10)
     x_ticks = np.append(x_ticks, 50)
@@ -171,13 +194,10 @@ def part_2():
 
     plt.yticks(fontsize=8)
     plt.xticks(fontsize=8)
-    #for tick in ax.yaxis.get_major_ticks():
-    #    tick.label.set_fontsize(10)
-
     plt.legend(loc='bottom right')
     plt.show()
 
-    plt.scatter(np.arange(1, len(E)+1), E, c="mediumseagreen", s=3)
+    plt.scatter(np.arange(1, len(E) + 1), E, c="mediumseagreen", s=3)
     plt.show()
 
 
@@ -262,9 +282,9 @@ def part_3():
 
 
 def main():
-    part_1()
+    # part_1()
     #part_2()
-    #part_3()
+    part_3()
 
 
 if __name__ == '__main__':

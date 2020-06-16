@@ -6,9 +6,25 @@ import scipy.spatial
 from scipy.linalg import eigh
 from sklearn.datasets import make_swiss_roll
 from mpl_toolkits.mplot3d import Axes3D
-import sys
-sys.path.append('../')
 from Util import read_file, MAIN_PATH
+
+
+import numexpr as ne
+import numpy as np
+import copy
+
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d.axes3d as p3
+
+from sklearn.datasets import make_swiss_roll, make_s_curve
+from sklearn.decomposition import PCA
+import sklearn.manifold as manifold
+
+# NOTE: make sure "path/to/datafold" is in sys.path or PYTHONPATH if datafold is not installed
+import datafold.dynfold as dfold
+import datafold.pcfold as pfold
+from datafold.utils.plot import plot_pairwise_eigenvector
+from datafold.dynfold import LocalRegressionSelection
 
 def generate_points(N):
     """
@@ -101,12 +117,14 @@ def diffusion_map_algorithm(X,L):
     # 10. Compute the eigenvectors φl of the matrix T = Q−1K by φl = Q−1/2vl.
     S = np.matmul(Q_inverse, v_l.T)
 
-    return S #* lambda_l
+    return S, lambda_l, v_l, a_l, Q, Q_inverse #* lambda_l
 
 
 def plot_5_eigenfunctions(tk,S):
     fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, figsize=(12, 12))
     # Skipping φ0 since it is constant
+    ax1.plot(tk, S[:, 0], color='teal', linewidth=0.5, label='$\phi_0$')
+    ax1.legend(loc="upper right")
     ax1.plot(tk, S[:, 1], color='teal', linewidth=0.5, label='$\phi_1$')
     ax1.legend(loc="upper right")
     ax2.plot(tk, S[:, 2], color='teal', linewidth=0.5, label='$\phi_2$')
@@ -160,28 +178,31 @@ def plot_swiss_roll(X,time):
     ax0.set_title("Swiss Roll")
     plt.show()
 
-def main():
-
-    ## Part 1
+def part_1():
     N = 1000
     L = 5
     X, tk = generate_points(N)
     plot_generated_points(X)
     tk = np.array(tk)
-    S = diffusion_map_algorithm(X, L)
+    S, _, _, _, _, _ = diffusion_map_algorithm(X, L)
     plot_5_eigenfunctions(tk, S)
 
-
-    ## Part 2
-    N = 1000
+def part_2():
+    N = 5000
     L = 10
     X, t = make_swiss_roll(N, noise=0.0, random_state=None)
-    plot_swiss_roll(X,t)
-    S = diffusion_map_algorithm(X,L)
+    plot_swiss_roll(X, t)
+    S, lambda_l, v_l, a_l, Q, Q_inverse = diffusion_map_algorithm(X, L)
     plot_eigenfunctions(S)
 
-    # PCA
+    #U = v_l
+    #V = np.matmul(Q_inverse, U)
+    R = np.matmul(Q, S)
+    plot_swiss_roll(R, t)
 
+
+
+    # PCA
     X = X - X.mean(axis=0, keepdims=True)
     U, sigma, V = np.linalg.svd(X, 0)
     S = np.diag(sigma)
@@ -205,7 +226,6 @@ def main():
         energy_2 += sigma[i] / trace
     reconstructed_2 = np.dot(U, np.dot(S_2, V))
 
-
     fig = plt.figure()
     ax1 = fig.gca(projection='3d')
     ax1.scatter(reconstructed_3[:, 0], reconstructed_3[:, 1], reconstructed_3[:, 2], c=t, cmap="twilight", s=1)
@@ -227,12 +247,54 @@ def main():
     plt.tight_layout()
     plt.show()
 
-    ## Part 3
-
+def part_3():
     data = read_file('data_DMAP_PCA_vadere.txt')
     L = 10
-    s = diffusion_map_algorithm(data, L)
+    s, _, _, _, _, _ = diffusion_map_algorithm(data, L)
     plot_eigenfunctions(s)
+
+def bonus():
+    nr_samples = 15000
+
+    # reduce number of points for plotting
+    nr_samples_plot = 1000
+    idx_plot = np.random.permutation(nr_samples)[0:nr_samples_plot]
+
+    # generate point cloud
+    X, X_color = make_s_curve(nr_samples, random_state=3, noise=0)
+
+    # plot
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111, projection="3d")
+    ax.scatter(X[idx_plot, 0], X[idx_plot, 1], X[idx_plot, 2], c=X_color[idx_plot], cmap=plt.cm.Spectral)
+    ax.set_xlabel("x");
+    ax.set_ylabel("y");
+    ax.set_zlabel("z")
+    ax.set_title("point cloud on S-shaped manifold");
+    ax.view_init(10, 70)
+
+    X_pcm = pfold.PCManifold(X)
+    X_pcm.optimize_parameters(result_scaling=0.5)
+    print(f'epsilon={X_pcm.kernel.epsilon}, cut-off={X_pcm.cut_off}')
+
+    dmap = dfold.DiffusionMaps(kernel=pfold.GaussianKernel(epsilon=X_pcm.kernel.epsilon), n_eigenpairs=9,
+                               dist_kwargs=dict(cut_off=X_pcm.cut_off))
+    dmap = dmap.fit(X_pcm)
+    evecs, evals = dmap.eigenvectors_, dmap.eigenvalues_
+
+    plot_pairwise_eigenvector(eigenvectors=dmap.eigenvectors_[idx_plot, :], n=1,
+                              fig_params=dict(figsize=[15, 15]),
+                              scatter_params=dict(cmap=plt.cm.Spectral, c=X_color[idx_plot]))
+
+def main():
+    ## Part 1
+    #part_1()
+    ## Part 2
+    #part_2()
+    ## Part 3
+    #part_3()
+
+    bonus()
 
 
 if __name__ == '__main__':
