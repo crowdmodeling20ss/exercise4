@@ -10,6 +10,11 @@ import sys
 sys.path.append('../')
 from Util import read_file, MAIN_PATH
 
+import datafold.dynfold as dfold
+import datafold.pcfold as pfold
+from datafold.utils.plot import plot_pairwise_eigenvector
+from datafold.dynfold import LocalRegressionSelection
+
 def generate_points(N):
     """
     Generate periodic data set
@@ -35,7 +40,7 @@ def plot_generated_points(X):
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     plt.tight_layout()
-    plt.savefig('part_1_generated_points.png')
+    #plt.savefig('part_1_generated_points.png')
     plt.show()
 
 
@@ -101,7 +106,7 @@ def diffusion_map_algorithm(X,L):
     # 10. Compute the eigenvectors φl of the matrix T = Q−1K by φl = Q−1/2vl.
     S = np.matmul(Q_inverse, v_l.T)
 
-    return S #* lambda_l
+    return S, lambda_l  # S * lambda_l
 
 
 def plot_5_eigenfunctions(tk,S):
@@ -120,56 +125,85 @@ def plot_5_eigenfunctions(tk,S):
     fig.text(0.5, 0.005, '$t_k$', ha='center')
     fig.text(0.005, 0.5, '$\phi_l(x_k)$', va='center', rotation='vertical')
     plt.tight_layout()
-    plt.savefig('part_1_eigenfunctions_5.png')
+   # plt.savefig('part_1_eigenfunctions_5.png')
     plt.show()
 
-def plot_eigenfunctions(S):
-    fig, ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)) = plt.subplots(3, 3, figsize=(12,12))
+def plot_eigenfunctions(S,t):
+    fig, ((ax0, ax1, ax2), (ax3, ax4, ax5), (ax6, ax7, ax8)) = plt.subplots(3, 3, figsize=(12,12))
     # Skipping φ0 since it is constant
-    ax1.scatter(S[:, 1], S[:, 2], color='mediumpurple', s=1)
+    ax0.scatter(S[:, 1], S[:, 0], c=t, cmap="Spectral", s=1)
+    ax0.set_ylabel('$\phi_0$')
+    ax1.scatter(S[:, 1], S[:, 2], c=t, cmap="Spectral", s=1)
     ax1.set_ylabel('$\phi_2$')
-    ax2.scatter(S[:, 1], S[:, 3], color='mediumpurple', s=1)
+    ax2.scatter(S[:, 1], S[:, 3], c=t, cmap="Spectral", s=1)
     ax2.set_ylabel('$\phi_3$')
-    ax3.scatter(S[:, 1], S[:, 4], color='mediumpurple', s=1)
+    ax3.scatter(S[:, 1], S[:, 4], c=t, cmap="Spectral", s=1)
     ax3.set_ylabel('$\phi_4$')
-    ax4.scatter(S[:, 1], S[:, 5], color='mediumpurple', s=1)
+    ax4.scatter(S[:, 1], S[:, 5], c=t, cmap="Spectral", s=1)
     ax4.set_ylabel('$\phi_5$')
-    ax5.scatter(S[:, 1], S[:, 6], color='mediumpurple', s=1)
+    ax5.scatter(S[:, 1], S[:, 6], c=t, cmap="Spectral", s=1)
     ax5.set_ylabel('$\phi_6$')
-    ax6.scatter(S[:, 1], S[:, 7], color='mediumpurple', s=1)
+    ax6.scatter(S[:, 1], S[:, 7], c=t, cmap="Spectral", s=1)
     ax6.set_ylabel('$\phi_7$')
-    ax7.scatter(S[:, 1], S[:, 8], color='mediumpurple', s=1)
+    ax7.scatter(S[:, 1], S[:, 8], c=t, cmap="Spectral", s=1)
     ax7.set_ylabel('$\phi_8$')
-    ax8.scatter(S[:, 1], S[:, 9], color='mediumpurple', s=1)
+    ax8.scatter(S[:, 1], S[:, 9], c=t, cmap="Spectral", s=1)
     ax8.set_ylabel('$\phi_9$')
-    ax9.scatter(S[:, 1], S[:, 10], color='mediumpurple', s=1)
-    ax9.set_ylabel('$\phi_{10}$')
 
     fig.text(0.5, 0.005, '$\phi_1$', ha='center')
     plt.tight_layout()
-    plt.savefig('part_2_eigenfunctions_versus_10_1000p.png')
+    plt.savefig('deneme_1000p.png')
     plt.show()
 
 def plot_swiss_roll(X,time):
     fig = plt.figure()
     ax0 = fig.gca(projection='3d')
-    ax0.scatter(X[:, 0], X[:, 1], X[:, 2], c=time, cmap="twilight", s=1)
+    ax0.scatter(X[:, 0], X[:, 1], X[:, 2], c=time, cmap="Spectral", s=1)
     ax0.set_xlabel('x')
     ax0.set_ylabel('y')
     ax0.set_zlabel('z')
     ax0.set_title("Swiss Roll")
     plt.show()
 
-def main():
+def bonus():
+    nr_samples = 5000
+    # reduce number of points for plotting
+    nr_samples_plot = 1000
+    idx_plot = np.random.permutation(nr_samples)[0:nr_samples_plot]
 
+    # generate point cloud
+    X, X_color =make_swiss_roll(nr_samples, noise=0.0, random_state=None)
+
+    X_pcm = pfold.PCManifold(X)
+    X_pcm.optimize_parameters(result_scaling=0.5)
+    print(f'epsilon={X_pcm.kernel.epsilon}, cut-off={X_pcm.cut_off}')
+
+    dmap = dfold.DiffusionMaps(kernel=pfold.GaussianKernel(epsilon=X_pcm.kernel.epsilon), n_eigenpairs=9,
+                               dist_kwargs=dict(cut_off=X_pcm.cut_off))
+    dmap = dmap.fit(X_pcm)
+    evecs, evals = dmap.eigenvectors_, dmap.eigenvalues_
+    print(evecs.shape)
+    print(evals.shape)
+
+    plot_pairwise_eigenvector(eigenvectors=dmap.eigenvectors_[idx_plot, :], n=1,
+                              fig_params=dict(figsize=[15, 15]),
+                              scatter_params=dict(cmap=plt.cm.Spectral, c=X_color[idx_plot]))
+    plt.show()
+
+
+def main():
+    bonus()
+    '''
     ## Part 1
     N = 1000
     L = 5
     X, tk = generate_points(N)
     plot_generated_points(X)
     tk = np.array(tk)
-    S = diffusion_map_algorithm(X, L)
+    S, lambda_l = diffusion_map_algorithm(X, L)
     plot_5_eigenfunctions(tk, S)
+    #plot_eigenfunctions(S,tk)
+    '''
 
 
     ## Part 2
@@ -177,9 +211,9 @@ def main():
     L = 10
     X, t = make_swiss_roll(N, noise=0.0, random_state=None)
     plot_swiss_roll(X,t)
-    S = diffusion_map_algorithm(X,L)
-    plot_eigenfunctions(S)
-
+    S, lambda_l = diffusion_map_algorithm(X,L)
+    plot_eigenfunctions(S,t)
+    '''
     # PCA
 
     X = X - X.mean(axis=0, keepdims=True)
@@ -208,7 +242,7 @@ def main():
 
     fig = plt.figure()
     ax1 = fig.gca(projection='3d')
-    ax1.scatter(reconstructed_3[:, 0], reconstructed_3[:, 1], reconstructed_3[:, 2], c=t, cmap="twilight", s=1)
+    ax1.scatter(reconstructed_3[:, 0], reconstructed_3[:, 1], reconstructed_3[:, 2], c=t, cmap="Spectral", s=2)
     ax1.set_title("Swiss Roll \n Reconstructed with 3 principal components \n Energy: {:.2f}%".format(energy_3 * 100))
     ax1.set_xlabel('x')
     ax1.set_ylabel('y')
@@ -218,7 +252,7 @@ def main():
 
     fig = plt.figure()
     ax2 = fig.gca(projection='3d')
-    ax2.scatter(reconstructed_2[:, 0], reconstructed_2[:, 1], reconstructed_2[:, 2], c=t, cmap="twilight", s=1)
+    ax2.scatter(reconstructed_2[:, 0], reconstructed_2[:, 1], reconstructed_2[:, 2], c=t, cmap="Spectral", s=2)
     ax2.set_title("Swiss Roll \n Reconstructed with 2 principal components \n Energy: {:.2f}%".format(energy_2 * 100))
     ax2.set_xlabel('x')
     ax2.set_ylabel('y')
@@ -227,12 +261,27 @@ def main():
     plt.tight_layout()
     plt.show()
 
+'''
+'''
     ## Part 3
 
-    data = read_file('data_DMAP_PCA_vadere.txt')
+    X = read_file('data_DMAP_PCA_vadere.txt')
     L = 10
-    s = diffusion_map_algorithm(data, L)
-    plot_eigenfunctions(s)
+    time = np.arange(X.shape[0])
+    s, lambda_l = diffusion_map_algorithm(X, L)
+    plot_eigenfunctions(s,time)
+
+    # plotting lambda values
+    plt.plot(lambda_l, 'o')
+    plt.show()
+
+    
+    plot_5_eigenfunctions(time, s)
+
+
+'''
+
+
 
 
 if __name__ == '__main__':
