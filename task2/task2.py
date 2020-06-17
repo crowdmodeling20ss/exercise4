@@ -35,6 +35,10 @@ def generate_points(N):
     return X, tk_arr
 
 def plot_generated_points(X):
+    """
+    Plots the data points given.
+    :param X: Data points
+    """
     fig,ax = plt.subplots(1,1, figsize=(12, 12))
     ax.scatter(X[:, 0], X[:, 1], color='mediumpurple', s=1)
     ax.set_xlabel('x')
@@ -62,7 +66,7 @@ def diffusion_map_algorithm(X,L):
 
     :param X: Data points [N,]
     :param L: Number of eigenfunctions
-    :return: [N, L+1] matrix. λ0φ0, λ1φ1, ...., λL+1φL+1 for every data point
+    :return: [N, L+1] matrix. φ0, φ1, ...., φL+1 for every data point
     """
 
     # 1. Form a distance matrix D with entries
@@ -110,6 +114,12 @@ def diffusion_map_algorithm(X,L):
 
 
 def plot_5_eigenfunctions(tk,S):
+    """
+    Plots 5 eigenfunctions.
+
+    :param tk: Time array
+    :param S: Matrix with eigenfunction values
+    """
     fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, figsize=(12, 12))
     # Skipping φ0 since it is constant
     ax1.plot(tk, S[:, 1], color='teal', linewidth=0.5, label='$\phi_1$')
@@ -125,12 +135,16 @@ def plot_5_eigenfunctions(tk,S):
     fig.text(0.5, 0.005, '$t_k$', ha='center')
     fig.text(0.005, 0.5, '$\phi_l(x_k)$', va='center', rotation='vertical')
     plt.tight_layout()
-   # plt.savefig('part_1_eigenfunctions_5.png')
     plt.show()
 
 def plot_eigenfunctions(S,t):
+    """
+    Plots first eigenfunctions versus others.
+
+    :param S: Matrix with eigenfunctions
+    :param t: Time array
+    """
     fig, ((ax0, ax1, ax2), (ax3, ax4, ax5), (ax6, ax7, ax8)) = plt.subplots(3, 3, figsize=(12,12))
-    # Skipping φ0 since it is constant
     ax0.scatter(S[:, 1], S[:, 0], c=t, cmap="Spectral", s=1)
     ax0.set_ylabel('$\phi_0$')
     ax1.scatter(S[:, 1], S[:, 2], c=t, cmap="Spectral", s=1)
@@ -152,10 +166,15 @@ def plot_eigenfunctions(S,t):
 
     fig.text(0.5, 0.005, '$\phi_1$', ha='center')
     plt.tight_layout()
-    plt.savefig('deneme_1000p.png')
     plt.show()
 
 def plot_swiss_roll(X,time):
+    """
+    Plots swiss-roll data set.
+
+    :param X: Data points
+    :param time: Time array
+    """
     fig = plt.figure()
     ax0 = fig.gca(projection='3d')
     ax0.scatter(X[:, 0], X[:, 1], X[:, 2], c=time, cmap="Spectral", s=1)
@@ -166,6 +185,9 @@ def plot_swiss_roll(X,time):
     plt.show()
 
 def bonus():
+    """
+    Plots first eigenfunctions versus other via datafold package.
+    """
     nr_samples = 5000
     # reduce number of points for plotting
     nr_samples_plot = 1000
@@ -192,8 +214,6 @@ def bonus():
 
 
 def main():
-    bonus()
-    '''
     ## Part 1
     N = 1000
     L = 5
@@ -202,8 +222,7 @@ def main():
     tk = np.array(tk)
     S, lambda_l = diffusion_map_algorithm(X, L)
     plot_5_eigenfunctions(tk, S)
-    #plot_eigenfunctions(S,tk)
-    '''
+    plot_eigenfunctions(S,tk)
 
 
     ## Part 2
@@ -213,7 +232,7 @@ def main():
     plot_swiss_roll(X,t)
     S, lambda_l = diffusion_map_algorithm(X,L)
     plot_eigenfunctions(S,t)
-    '''
+
     # PCA
 
     X = X - X.mean(axis=0, keepdims=True)
@@ -261,8 +280,8 @@ def main():
     plt.tight_layout()
     plt.show()
 
-'''
-'''
+    bonus()
+
     ## Part 3
 
     X = read_file('data_DMAP_PCA_vadere.txt')
@@ -274,12 +293,8 @@ def main():
     # plotting lambda values
     plt.plot(lambda_l, 'o')
     plt.show()
-
-    
     plot_5_eigenfunctions(time, s)
 
-
-'''
 
 
 
