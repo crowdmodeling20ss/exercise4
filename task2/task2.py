@@ -290,11 +290,11 @@ def main():
     ## Part 1
     #part_1()
     ## Part 2
-    #part_2()
+    part_2()
     ## Part 3
     #part_3()
 
-    bonus()
+    #bonus()
 
 
 if __name__ == '__main__':
